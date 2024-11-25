@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import messagebox
+from tkinter import messagebox, filedialog
 import cv2
 import numpy as np
 import pyautogui
@@ -14,27 +14,19 @@ import os
 import re
 import time
 
-# Create necessary folders
-LOG_FOLDER = "logs"
-VIDEOS_FOLDER = os.path.join(LOG_FOLDER, "videos")
-SCREENSHOT_FOLDER = os.path.join(LOG_FOLDER, "screenshots")
-os.makedirs(LOG_FOLDER, exist_ok=True)
-os.makedirs(VIDEOS_FOLDER, exist_ok=True)
-os.makedirs(SCREENSHOT_FOLDER, exist_ok=True)
+# Global variables
+recording = False
+stop_program = False
+out = None
+recording_session = 0
+recording_folder = None  # To store the user-selected folder for recordings
+screenshots_folder = None
+videos_folder = None
+log_file_path = None
 
-# File paths
-LOG_FILE = os.path.join(LOG_FOLDER, "system_events.log")
-
-# Screen capture settings
-FRAME_RATE = 10  # Frames per second for video capture
+FRAME_RATE = 10 # change this to make the video smoother.
 screen_width, screen_height = pyautogui.size()
 fourcc = cv2.VideoWriter_fourcc(*"XVID")
-
-# Global variables
-stop_program = False
-recording = False
-out = None
-recording_session = 0  # Track the recording session number
 
 
 def sanitize_filename(filename):
@@ -54,13 +46,11 @@ def get_active_window_info():
     app_name = process.name()
     window_title = win32gui.GetWindowText(hwnd)
 
-    # Get window position and determine monitor
     rect = win32gui.GetWindowRect(hwnd)  # (left, top, right, bottom)
     x_center = (rect[0] + rect[2]) // 2
     y_center = (rect[1] + rect[3]) // 2
     monitors = get_monitors()
 
-    # Determine monitor number
     monitor_number = 0
     for i, monitor in enumerate(monitors, start=1):
         if monitor.x <= x_center < monitor.x + monitor.width and \
@@ -72,19 +62,21 @@ def get_active_window_info():
 
 
 def log_event(event_type, details):
+    global log_file_path
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
     sanitized_details = sanitize_unicode(details)
     log_message = f"[{timestamp}] {event_type}: {sanitized_details}\n"
-    with open(LOG_FILE, "a", encoding="utf-8") as file:
+    with open(log_file_path, "a", encoding="utf-8") as file:
         file.write(log_message)
     print(log_message, end="")
 
 
 def save_screenshot(event_description):
+    global screenshots_folder
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S%f")[:-3]
     sanitized_event = sanitize_filename(event_description)
     screenshot_filename = f"{timestamp}_{sanitized_event}.png"
-    screenshot_path = os.path.join(SCREENSHOT_FOLDER, screenshot_filename)
+    screenshot_path = os.path.join(screenshots_folder, screenshot_filename)
     screenshot = pyautogui.screenshot()
     screenshot.save(screenshot_path)
     log_event("Screenshot", f"{event_description}: Saved {screenshot_path}")
@@ -129,9 +121,32 @@ def get_next_video_filename():
     """
     Generate the next video filename based on the recording session number.
     """
-    global recording_session
+    global recording_session, videos_folder
     recording_session += 1
-    return os.path.join(VIDEOS_FOLDER, f"recording_{recording_session}.avi")
+    return os.path.join(videos_folder, f"recording_{recording_session}.avi")
+
+
+# Initialize Folders
+def initialize_folders():
+    global recording_folder, screenshots_folder, videos_folder, log_file_path
+
+    # Ask user for folder
+    recording_folder = filedialog.askdirectory(title="Select Folder for Recordings")
+    if not recording_folder:
+        messagebox.showerror("Error", "Recording folder not selected. Please try again.")
+        return False
+
+    # Create subfolders
+    screenshots_folder = os.path.join(recording_folder, "screenshots")
+    videos_folder = os.path.join(recording_folder, "videos")
+    log_folder = os.path.join(recording_folder, "logs")
+    os.makedirs(screenshots_folder, exist_ok=True)
+    os.makedirs(videos_folder, exist_ok=True)
+    os.makedirs(log_folder, exist_ok=True)
+
+    # Set log file path
+    log_file_path = os.path.join(log_folder, "system_events.log")
+    return True
 
 
 # Start and Stop Functions
@@ -139,6 +154,10 @@ def start_recording():
     global recording, stop_program, out, mouse_listener, active_window_thread, screen_record_thread
 
     if not recording:
+        # Initialize folders on first recording session
+        if recording_folder is None and not initialize_folders():
+            return
+
         stop_program = False
         recording = True
 
