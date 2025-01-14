@@ -5,3 +5,6 @@ videos
 dist
 .venv
 build
+participants.txt
+input
+output
