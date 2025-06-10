@@ -84,7 +84,8 @@ from pytesseract import pytesseract
 # Defining paths to tesseract.exe 
 # and the image we would be using 
 path_to_tesseract = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
-image_path = r'pp1.jpg'
+# image_path = r'qt1.jpg'
+image_path = r'pp2.png'
 
 # Opening the image & storing it in an image object 
 img = Image.open(image_path) 
@@ -101,5 +102,5 @@ text = pytesseract.image_to_string(img)
 print(text)
 
 
-with open("ss.txt", "a+") as f:
+with open("ss.txt", "w+") as f:
     f.write(text)
