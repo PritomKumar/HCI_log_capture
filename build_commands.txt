@@ -1,1 +1,2 @@
 pyinstaller --onefile --noconsole  new_screenshot_app.py
+pyinstaller --onefile --noconsole --icon=app_icon.ico .\new_screenrecording_app

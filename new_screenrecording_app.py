@@ -1,42 +1,43 @@
+import tkinter as tk
+from tkinter import messagebox, filedialog
 import cv2
 import numpy as np
 import pyautogui
 import psutil
 import win32gui
 import win32process
-from pynput import mouse, keyboard
+from pynput import mouse
 from datetime import datetime
 from screeninfo import get_monitors
 import threading
 import os
-import time
 import re
+import time
 
-# Create a log folder
-LOG_FOLDER = "logs"
-os.makedirs(LOG_FOLDER, exist_ok=True)
+# Global variables
+recording = False
+stop_program = False
+out = None
+recording_session = 0
+recording_folder = None  # To store the user-selected folder for recordings
+screenshots_folder = None
+videos_folder = None
+log_file_path = None
 
-# File paths
-current_timestamp = str(datetime.now().strftime("%Y%m%d_%H%M%S"))
-print(f"Current timestamp: {current_timestamp}")
-LOG_FOLDER = os.path.join(LOG_FOLDER, current_timestamp)
-
-LOG_FILE = os.path.join(LOG_FOLDER, "system_events.log")
-VIDEO_FILE = os.path.join(LOG_FOLDER, "screen_recording.avi")
-SCREENSHOT_FOLDER = os.path.join(LOG_FOLDER, "screenshots")
-os.makedirs(SCREENSHOT_FOLDER, exist_ok=True)
-
-# Screen capture settings
-FRAME_RATE = 30  # Frames per second for video capture
-QUIT_KEY = keyboard.Key.esc  # Press ESC to quit
-ENTER_KEY = keyboard.Key.enter  # Enter key to trigger screenshot
-
+FRAME_RATE = 10 # change this to make the video smoother.
 screen_width, screen_height = pyautogui.size()
 fourcc = cv2.VideoWriter_fourcc(*"XVID")
-out = cv2.VideoWriter(VIDEO_FILE, fourcc, FRAME_RATE, (screen_width, screen_height))
 
-# Flag to indicate when to stop the program
-stop_program = False
+
+def sanitize_filename(filename):
+    """Remove invalid characters for filenames."""
+    return re.sub(r"[<>:\"/\\|?*]", "_", filename)
+
+
+def sanitize_unicode(text):
+    """Replace non-ASCII characters with a space."""
+    return ''.join(char if ord(char) < 128 else ' ' for char in text)
+
 
 def get_active_window_info():
     hwnd = win32gui.GetForegroundWindow()
@@ -44,14 +45,12 @@ def get_active_window_info():
     process = psutil.Process(pid)
     app_name = process.name()
     window_title = win32gui.GetWindowText(hwnd)
-    
-    # Get window position and determine monitor
+
     rect = win32gui.GetWindowRect(hwnd)  # (left, top, right, bottom)
     x_center = (rect[0] + rect[2]) // 2
     y_center = (rect[1] + rect[3]) // 2
     monitors = get_monitors()
-    
-    # Determine monitor number
+
     monitor_number = 0
     for i, monitor in enumerate(monitors, start=1):
         if monitor.x <= x_center < monitor.x + monitor.width and \
@@ -61,49 +60,40 @@ def get_active_window_info():
 
     return app_name, window_title, monitor_number
 
-def sanitize_filename(filename):
-    """Remove invalid characters for filenames."""
-    return re.sub(r"[<>:\"/\\|?*]", "_", filename)
 
 def log_event(event_type, details):
+    global log_file_path
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
-    log_message = f"[{timestamp}] {event_type}: {details}\n"
-    with open(LOG_FILE, "a") as file:
+    sanitized_details = sanitize_unicode(details)
+    log_message = f"[{timestamp}] {event_type}: {sanitized_details}\n"
+    with open(log_file_path, "a", encoding="utf-8") as file:
         file.write(log_message)
     print(log_message, end="")
 
+
 def save_screenshot(event_description):
+    global screenshots_folder
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S%f")[:-3]
     sanitized_event = sanitize_filename(event_description)
     screenshot_filename = f"{timestamp}_{sanitized_event}.png"
-    screenshot_path = os.path.join(SCREENSHOT_FOLDER, screenshot_filename)
+    screenshot_path = os.path.join(screenshots_folder, screenshot_filename)
     screenshot = pyautogui.screenshot()
     screenshot.save(screenshot_path)
-    log_event("Screenshot", f"{event_description}: Saved {screenshot_path}")
+    # log_event("Screenshot", f"{event_description}: Saved {screenshot_path}")
 
-# Mouse event handlers
+
+# Mouse Event Handlers
 def on_click(x, y, button, pressed):
-    if pressed:
+    if pressed and recording:
         event_description = f"Mouse_Click_at_{x}_{y}_Button_{button}"
         log_event("Mouse Click", f"Button {button} at ({x}, {y})")
         save_screenshot(event_description)
 
-# Keyboard event handlers
-def on_press(key):
-    global stop_program
-    if key == QUIT_KEY:
-        stop_program = True
-        log_event("Quit", "Program terminated by user.")
-        return False  # Stop the keyboard listener
-    elif key == ENTER_KEY:
-        log_event("Key Press", "Enter key pressed")
-        save_screenshot("Enter_Key_Press")
 
-# Monitor active window title change
 def monitor_active_window():
     global stop_program
     last_window = None
-    while not stop_program:
+    while not stop_program and recording:
         app_name, window_title, monitor_number = get_active_window_info()
         current_window = f"{app_name} | {window_title} | Monitor {monitor_number}"
         if current_window != last_window:
@@ -116,44 +106,136 @@ def monitor_active_window():
             last_window = current_window
         time.sleep(1)
 
-# Screen recording function
+
 def record_screen():
-    global stop_program
-    while not stop_program:
-        # Capture the screen continuously for video
+    global stop_program, out
+    while not stop_program and recording:
         screenshot = pyautogui.screenshot()
         frame = np.array(screenshot)
         frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
         out.write(frame)
         time.sleep(1 / FRAME_RATE)
 
-# Main function
-def main():
-    global stop_program
-    # Start screen recording in a separate thread
-    screen_thread = threading.Thread(target=record_screen, daemon=True)
-    screen_thread.start()
 
-    # Start mouse listener
-    mouse_listener = mouse.Listener(on_click=on_click)
-    mouse_listener.start()
+def get_next_video_filename():
+    """
+    Generate the next video filename based on the recording session number.
+    """
+    global recording_session, videos_folder
+    recording_session += 1
+    return os.path.join(videos_folder, f"recording_{recording_session}.avi")
 
-    # Start keyboard listener
-    keyboard_listener = keyboard.Listener(on_press=on_press)
-    keyboard_listener.start()
 
-    # Start active window monitoring
-    active_window_thread = threading.Thread(target=monitor_active_window, daemon=True)
-    active_window_thread.start()
+# Initialize Folders
+def initialize_folders():
+    global recording_folder, screenshots_folder, videos_folder, log_file_path
 
-    # Wait for the quit signal
-    keyboard_listener.join()
+    # Ask user for folder
+    recording_folder = filedialog.askdirectory(title="Select Folder for Recordings")
+    if not recording_folder:
+        messagebox.showerror("Error", "Recording folder not selected. Please try again.")
+        return False
 
-    # Stop everything
-    stop_program = True
-    mouse_listener.stop()
-    out.release()
-    cv2.destroyAllWindows()
+    # Create a log folder
+    DATA_FOLDER = "recording_logs"
+    # os.makedirs(DATA_FOLDER, exist_ok=True)
 
+
+    # File paths
+    current_timestamp = str(datetime.now().strftime("%Y%m%d_%H%M%S"))
+    print(f"Current timestamp: {current_timestamp}")
+    DATA_FOLDER = os.path.join(DATA_FOLDER, current_timestamp)
+    recording_folder = os.path.join(recording_folder, DATA_FOLDER)
+
+    # LOG_FILE = os.path.join(LOG_FOLDER, "system_events.log")
+    # VIDEO_FILE = os.path.join(LOG_FOLDER, "screen_recording.avi")
+    # SCREENSHOT_FOLDER = os.path.join(LOG_FOLDER, "screenshots")
+    # os.makedirs(DATA_FOLDER, exist_ok=True)
+
+    # Create subfolders
+    screenshots_folder = os.path.join(recording_folder, "screenshots")
+    videos_folder = os.path.join(recording_folder, "videos")
+    log_folder = os.path.join(recording_folder, "logs")
+    os.makedirs(screenshots_folder, exist_ok=True)
+    os.makedirs(videos_folder, exist_ok=True)
+    os.makedirs(log_folder, exist_ok=True)
+
+    # Set log file path
+    log_file_path = os.path.join(log_folder, "system_events.log")
+    return True
+
+
+# Start and Stop Functions
+def start_recording():
+    global recording, stop_program, out, mouse_listener, active_window_thread, screen_record_thread
+
+    if not recording:
+        # Initialize folders on first recording session
+        if recording_folder is None and not initialize_folders():
+            return
+
+        stop_program = False
+        recording = True
+
+        # Update UI
+        status_label.config(text="Recording in Progress...", fg="green")
+
+        # Initialize video writer for the new session
+        video_filename = get_next_video_filename()
+        out = cv2.VideoWriter(video_filename, fourcc, FRAME_RATE, (screen_width, screen_height))
+
+        # Start threads
+        mouse_listener = mouse.Listener(on_click=on_click)
+        mouse_listener.start()
+
+        active_window_thread = threading.Thread(target=monitor_active_window, daemon=True)
+        active_window_thread.start()
+
+        screen_record_thread = threading.Thread(target=record_screen, daemon=True)
+        screen_record_thread.start()
+
+        log_event("Start", f"Recording started: {video_filename}")
+
+
+def stop_recording():
+    global recording, stop_program, out, mouse_listener
+    if recording:
+        recording = False
+        stop_program = True
+
+        # Update UI
+        status_label.config(text="Not Recording", fg="red")
+
+        # Stop mouse listener and threads
+        mouse_listener.stop()
+
+        log_event("Stop", f"Recording stopped. Saved as recording_{recording_session}.avi")
+        out.release()
+        messagebox.showinfo("Info", f"Recording saved as recording_{recording_session}.avi!")
+
+
+# Create UI
+def create_ui():
+    window = tk.Tk()
+    window.title("Screen Recorder")
+    window.geometry("300x200")
+    window.resizable(False, False)
+
+    global status_label
+    status_label = tk.Label(window, text="Not Recording", font=("Arial", 12), fg="red")
+    status_label.pack(pady=10)
+
+    start_button = tk.Button(window, text="Start Recording", font=("Arial", 12), bg="green", fg="white",
+                              command=start_recording)
+    start_button.pack(pady=5)
+
+    stop_button = tk.Button(window, text="Stop Recording", font=("Arial", 12), bg="red", fg="white",
+                             command=stop_recording)
+    stop_button.pack(pady=5)
+
+    window.mainloop()
+
+
+# Main Function
 if __name__ == "__main__":
-    main()
+    create_ui()
