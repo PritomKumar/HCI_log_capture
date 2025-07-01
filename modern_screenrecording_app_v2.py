@@ -71,8 +71,7 @@ def get_active_window_info():
 
     monitor_number = 0
     for i, monitor in enumerate(monitors, start=1):
-        if monitor.x <= x_center < monitor.x + monitor.width and \
-           monitor.y <= y_center < monitor.y + monitor.height:
+        if monitor.x <= x_center < monitor.x + monitor.width and monitor.y <= y_center < monitor.y + monitor.height:
             monitor_number = i
             break
 
@@ -186,19 +185,19 @@ class ModernScreenRecorder:
         
         # Configure custom styles
         self.style.configure('Header.TLabel', 
-                           background=COLORS['bg_primary'], 
-                           foreground=COLORS['text_primary'],
-                           font=('Segoe UI', 18, 'bold'))
+                            background=COLORS['bg_primary'], 
+                            foreground=COLORS['text_primary'],
+                            font=('Segoe UI', 18, 'bold'))
         
         self.style.configure('Status.TLabel',
-                           background=COLORS['bg_primary'],
-                           foreground=COLORS['text_secondary'],
-                           font=('Segoe UI', 12))
+                            background=COLORS['bg_primary'],
+                            foreground=COLORS['text_secondary'],
+                            font=('Segoe UI', 12))
         
         self.style.configure('Info.TLabel',
-                           background=COLORS['bg_tertiary'],
-                           foreground=COLORS['text_primary'],
-                           font=('Segoe UI', 10, 'bold'))
+                            background=COLORS['bg_tertiary'],
+                            foreground=COLORS['text_primary'],
+                            font=('Segoe UI', 10, 'bold'))
 
     def create_widgets(self):
         # Main container
@@ -210,17 +209,17 @@ class ModernScreenRecorder:
         header_frame.pack(fill=tk.X, pady=(0, 20))
         
         title_label = ttk.Label(header_frame, text="🧪 Experiment Recorder", 
-                               style='Header.TLabel')
+                                                style='Header.TLabel')
         title_label.pack()
         
         subtitle_label = ttk.Label(header_frame, 
-                                  text="Capture screen, interactions & system events",
-                                  style='Status.TLabel')
+                                    text="Capture screen, interactions & system events",
+                                    style='Status.TLabel')
         subtitle_label.pack(pady=(5, 0))
         
         # Status Card
         status_frame = tk.Frame(main_frame, bg=COLORS['bg_tertiary'], 
-                               relief=tk.FLAT, bd=0)
+                                relief=tk.FLAT, bd=0)
         status_frame.pack(fill=tk.X, pady=(0, 20), padx=0, ipady=20)
         
         # Add subtle border effect
@@ -238,9 +237,9 @@ class ModernScreenRecorder:
         self.status_label.pack(pady=(0, 8))
         
         self.session_label = tk.Label(status_frame, text="Session: 0", 
-                                     font=('Segoe UI', 11),
-                                     bg=COLORS['bg_tertiary'], 
-                                     fg=COLORS['text_secondary'])
+                                    font=('Segoe UI', 11),
+                                    bg=COLORS['bg_tertiary'], 
+                                    fg=COLORS['text_secondary'])
         self.session_label.pack(pady=(0, 15))
         
         # Control Buttons Frame
@@ -249,13 +248,13 @@ class ModernScreenRecorder:
         
         # Start/Stop buttons
         self.start_button = tk.Button(controls_frame, text="▶ Start Recording",
-                                     font=('Segoe UI', 12, 'bold'),
-                                     bg=COLORS['success'], fg=COLORS['bg_primary'],
-                                     activebackground=COLORS['success'],
-                                     activeforeground=COLORS['bg_primary'],
-                                     relief=tk.FLAT, padx=20, pady=12,
-                                     cursor='hand2',
-                                     command=self.start_recording)
+                                    font=('Segoe UI', 12, 'bold'),
+                                    bg=COLORS['success'], fg=COLORS['bg_primary'],
+                                    activebackground=COLORS['success'],
+                                    activeforeground=COLORS['bg_primary'],
+                                    relief=tk.FLAT, padx=20, pady=12,
+                                    cursor='hand2',
+                                    command=self.start_recording)
         self.start_button.pack(fill=tk.X, pady=(0, 12))
         
         self.stop_button = tk.Button(controls_frame, text="⏹ Stop Recording",
@@ -274,7 +273,7 @@ class ModernScreenRecorder:
         utils_frame.pack(fill=tk.X, pady=(0, 20))
         
         utils_title = ttk.Label(utils_frame, text="🔧 Utilities", 
-                               style='Info.TLabel')
+                                style='Info.TLabel')
         utils_title.pack(pady=(0, 10))
         
         # Row 1: View Log and Open Folder
@@ -282,30 +281,30 @@ class ModernScreenRecorder:
         utils_row1.pack(fill=tk.X, pady=(0, 5))
         
         self.log_button = tk.Button(utils_row1, text="📋 View Log",
-                                   font=('Segoe UI', 10, 'bold'),
-                                   bg=COLORS['accent_primary'], fg=COLORS['bg_primary'],
-                                   activebackground=COLORS['accent_primary'],
-                                   activeforeground=COLORS['bg_primary'],
-                                   relief=tk.FLAT, padx=15, pady=10,
-                                   cursor='hand2',
-                                   command=self.view_log,
-                                   state=tk.DISABLED)
+                                    font=('Segoe UI', 10, 'bold'),
+                                    bg=COLORS['accent_primary'], fg=COLORS['bg_primary'],
+                                    activebackground=COLORS['accent_primary'],
+                                    activeforeground=COLORS['bg_primary'],
+                                    relief=tk.FLAT, padx=15, pady=10,
+                                    cursor='hand2',
+                                    command=self.view_log,
+                                    state=tk.DISABLED)
         self.log_button.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 8))
         
         self.folder_button = tk.Button(utils_row1, text="📁 Open Folder",
-                                      font=('Segoe UI', 10, 'bold'),
-                                      bg=COLORS['warning'], fg=COLORS['bg_primary'],
-                                      activebackground=COLORS['warning'],
-                                      activeforeground=COLORS['bg_primary'],
-                                      relief=tk.FLAT, padx=15, pady=10,
-                                      cursor='hand2',
-                                      command=self.open_folder,
-                                      state=tk.DISABLED)
+                                        font=('Segoe UI', 10, 'bold'),
+                                        bg=COLORS['warning'], fg=COLORS['bg_primary'],
+                                        activebackground=COLORS['warning'],
+                                        activeforeground=COLORS['bg_primary'],
+                                        relief=tk.FLAT, padx=15, pady=10,
+                                        cursor='hand2',
+                                        command=self.open_folder,
+                                        state=tk.DISABLED)
         self.folder_button.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(8, 0))
         
         # Settings Frame
         settings_frame = tk.Frame(main_frame, bg=COLORS['bg_tertiary'], 
-                                 relief=tk.FLAT, bd=0)
+                                    relief=tk.FLAT, bd=0)
         settings_frame.pack(fill=tk.X, pady=(0, 20), padx=0, ipady=15)
         
         # Add subtle border effect
@@ -313,7 +312,7 @@ class ModernScreenRecorder:
         border_frame2.pack(fill=tk.X, side=tk.BOTTOM)
         
         settings_title = ttk.Label(settings_frame, text="⚙️ Settings", 
-                                  style='Info.TLabel')
+                                    style='Info.TLabel')
         settings_title.pack(pady=(15, 15))
         
         # Frame rate setting
@@ -345,28 +344,26 @@ class ModernScreenRecorder:
         fps_spinbox.bind('<FocusOut>', lambda event: self.update_frame_rate())
         
         # Info Panel
-        info_frame = tk.Frame(main_frame, bg=COLORS['bg_tertiary'], 
-                             relief=tk.FLAT, bd=0)
+        info_frame = tk.Frame(main_frame, bg=COLORS['bg_tertiary'], relief=tk.FLAT, bd=0)
         info_frame.pack(fill=tk.BOTH, expand=True, padx=0, pady=(0, 10))
         
         # Add subtle border effect
         border_frame3 = tk.Frame(info_frame, bg=COLORS['border_light'], height=1)
         border_frame3.pack(fill=tk.X, side=tk.BOTTOM)
         
-        info_title = ttk.Label(info_frame, text="ℹ️ Session Info", 
-                              style='Info.TLabel')
+        info_title = ttk.Label(info_frame, text="ℹ️ Session Info", style='Info.TLabel')
         info_title.pack(pady=(15, 10))
         
         self.info_text = scrolledtext.ScrolledText(info_frame, height=8,
-                                                  font=('JetBrains Mono', 10),
-                                                  bg=COLORS['surface'], 
-                                                  fg=COLORS['text_primary'],
-                                                  insertbackground=COLORS['accent_primary'],
-                                                  selectbackground=COLORS['accent_secondary'],
-                                                  selectforeground=COLORS['bg_primary'],
-                                                  relief=tk.FLAT,
-                                                  bd=0,
-                                                  state=tk.DISABLED)
+                                                    font=('JetBrains Mono', 10),
+                                                    bg=COLORS['surface'], 
+                                                    fg=COLORS['text_primary'],
+                                                    insertbackground=COLORS['accent_primary'],
+                                                    selectbackground=COLORS['accent_secondary'],
+                                                    selectforeground=COLORS['bg_primary'],
+                                                    relief=tk.FLAT,
+                                                    bd=0,
+                                                    state=tk.DISABLED)
         self.info_text.pack(fill=tk.BOTH, expand=True, padx=15, pady=(0, 15))
         
         # Add initial info
@@ -396,33 +393,33 @@ class ModernScreenRecorder:
         if recording:
             self.status_label.config(text="● Recording Active", fg=COLORS['success'])
             self.start_button.config(state=tk.DISABLED, 
-                                   bg=COLORS['text_muted'],
-                                   fg=COLORS['bg_secondary'])
+                                    bg=COLORS['text_muted'],
+                                    fg=COLORS['bg_secondary'])
             self.stop_button.config(state=tk.NORMAL,
-                                  bg=COLORS['danger'],
-                                  fg=COLORS['bg_primary'])
+                                    bg=COLORS['danger'],
+                                    fg=COLORS['bg_primary'])
             self.session_label.config(text=f"Session: {recording_session}")
         else:
             self.status_label.config(text="● Not Recording", fg=COLORS['text_muted'])
             self.start_button.config(state=tk.NORMAL,
-                                   bg=COLORS['success'],
-                                   fg=COLORS['bg_primary'])
+                                    bg=COLORS['success'],
+                                    fg=COLORS['bg_primary'])
             self.stop_button.config(state=tk.DISABLED,
-                                  bg=COLORS['text_muted'],
-                                  fg=COLORS['bg_secondary'])
+                                    bg=COLORS['text_muted'],
+                                    fg=COLORS['bg_secondary'])
             
         # Enable utility buttons if we have a recording folder
         if recording_folder:
             self.log_button.config(state=tk.NORMAL,
-                                 bg=COLORS['accent_primary'],
-                                 fg=COLORS['bg_primary'])
+                                    bg=COLORS['accent_primary'],
+                                    fg=COLORS['bg_primary'])
             self.folder_button.config(state=tk.NORMAL,
                                     bg=COLORS['warning'],
                                     fg=COLORS['bg_primary'])
         else:
             self.log_button.config(state=tk.DISABLED,
-                                 bg=COLORS['text_muted'],
-                                 fg=COLORS['bg_secondary'])
+                                    bg=COLORS['text_muted'],
+                                    fg=COLORS['bg_secondary'])
             self.folder_button.config(state=tk.DISABLED,
                                     bg=COLORS['text_muted'],
                                     fg=COLORS['bg_secondary'])
@@ -479,7 +476,7 @@ class ModernScreenRecorder:
             
             self.add_info(f"✅ Session {recording_session} saved successfully!")
             messagebox.showinfo("Recording Complete", 
-                              f"Recording saved as recording_{recording_session}.avi!")
+                                f"Recording saved as recording_{recording_session}.avi!")
 
     def view_log(self):
         """Open log file in a new window"""
@@ -506,20 +503,20 @@ class ModernScreenRecorder:
         
         # Header
         header_label = tk.Label(log_frame, text="📊 System Events Log", 
-                               font=('Segoe UI', 18, 'bold'),
-                               bg=COLORS['bg_primary'], fg=COLORS['text_primary'])
+                                font=('Segoe UI', 18, 'bold'),
+                                bg=COLORS['bg_primary'], fg=COLORS['text_primary'])
         header_label.pack(pady=(0, 20))
         
         # Log text area
         log_text = scrolledtext.ScrolledText(log_frame, 
-                                           font=('JetBrains Mono', 11),
-                                           bg=COLORS['surface'], 
-                                           fg=COLORS['text_primary'],
-                                           insertbackground=COLORS['accent_primary'],
-                                           selectbackground=COLORS['accent_secondary'],
-                                           selectforeground=COLORS['bg_primary'],
-                                           relief=tk.FLAT,
-                                           bd=0)
+                                            font=('JetBrains Mono', 11),
+                                            bg=COLORS['surface'], 
+                                            fg=COLORS['text_primary'],
+                                            insertbackground=COLORS['accent_primary'],
+                                            selectbackground=COLORS['accent_secondary'],
+                                            selectforeground=COLORS['bg_primary'],
+                                            relief=tk.FLAT,
+                                            bd=0)
         log_text.pack(fill=tk.BOTH, expand=True, pady=(0, 20))
         
         # Load and display log content
@@ -537,23 +534,23 @@ class ModernScreenRecorder:
         buttons_frame.pack(fill=tk.X)
         
         refresh_btn = tk.Button(buttons_frame, text="🔄 Refresh",
-                               font=('Segoe UI', 11, 'bold'),
-                               bg=COLORS['info'], fg=COLORS['bg_primary'],
-                               activebackground=COLORS['info'],
-                               activeforeground=COLORS['bg_primary'],
-                               relief=tk.FLAT, padx=20, pady=10,
-                               cursor='hand2',
-                               command=lambda: self.refresh_log(log_text))
+                                font=('Segoe UI', 11, 'bold'),
+                                bg=COLORS['info'], fg=COLORS['bg_primary'],
+                                activebackground=COLORS['info'],
+                                activeforeground=COLORS['bg_primary'],
+                                relief=tk.FLAT, padx=20, pady=10,
+                                cursor='hand2',
+                                command=lambda: self.refresh_log(log_text))
         refresh_btn.pack(side=tk.LEFT, padx=(0, 15))
         
         close_btn = tk.Button(buttons_frame, text="✕ Close",
-                             font=('Segoe UI', 11, 'bold'),
-                             bg=COLORS['accent_secondary'], fg=COLORS['bg_primary'],
-                             activebackground=COLORS['accent_secondary'],
-                             activeforeground=COLORS['bg_primary'],
-                             relief=tk.FLAT, padx=20, pady=10,
-                             cursor='hand2',
-                             command=log_window.destroy)
+                                font=('Segoe UI', 11, 'bold'),
+                                bg=COLORS['accent_secondary'], fg=COLORS['bg_primary'],
+                                activebackground=COLORS['accent_secondary'],
+                                activeforeground=COLORS['bg_primary'],
+                                relief=tk.FLAT, padx=20, pady=10,
+                                cursor='hand2',
+                                command=log_window.destroy)
         close_btn.pack(side=tk.RIGHT)
 
     def refresh_log(self, log_text_widget):
